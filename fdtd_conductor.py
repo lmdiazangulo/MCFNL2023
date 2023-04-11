@@ -9,6 +9,7 @@ tFinal = 20
 L = 10
 x0 = 5.0
 s0 = 0.75
+sigma = 0.5
 
 x = np.linspace(0, L, num=101)
 xDual = (x[1:] + x[:-1])/2 
@@ -28,8 +29,10 @@ h = np.exp( -(xDual - x0)**2 / (2*s0**2))
 dt = CFL * dx / c0
 tRange = np.arange(0, tFinal, dt) # Utiliza paso en vez de numero de puntos como linspace
 
+alpha = sigma/2 + eps/dt
+
 for t in tRange:
-    e[1:-1] = (-dt / dx / eps) * (h[1:] - h[:-1]) + e[1:-1]
+    e[1:-1] = -(sigma/2 - eps/dt)/alpha * e[1:-1] - (1.0 / dx / alpha) * (h[1:] - h[:-1])
     h[:] = (-dt / dx / mu) * (e[1:] - e[:-1]) + h[:]
 
     plt.plot(x, e, '*')

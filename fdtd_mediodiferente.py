@@ -7,8 +7,8 @@ c0 = 1/np.sqrt(eps*mu)
 CFL = 0.9
 tFinal = 20
 L = 10
-x0 = 5.0
-s0 = 0.75
+x0 = 2.5
+s0 = 0.5
 
 x = np.linspace(0, L, num=101)
 xDual = (x[1:] + x[:-1])/2 
@@ -22,18 +22,22 @@ e = np.exp( -(x - x0)**2 / (2*s0**2))
 e[0] = 0.0
 e[-1] = 0.0
 
-# h = np.zeros(xDual.shape)
+eps = np.ones(x.shape)
+eps[x>=L/2] = 4.0
+
+h = np.zeros(xDual.shape)
 h = np.exp( -(xDual - x0)**2 / (2*s0**2))
 
 dt = CFL * dx / c0
 tRange = np.arange(0, tFinal, dt) # Utiliza paso en vez de numero de puntos como linspace
 
 for t in tRange:
-    e[1:-1] = (-dt / dx / eps) * (h[1:] - h[:-1]) + e[1:-1]
+    e[1:-1] = (-dt / dx / eps[1:-1]) * (h[1:] - h[:-1]) + e[1:-1]
     h[:] = (-dt / dx / mu) * (e[1:] - e[:-1]) + h[:]
 
-    plt.plot(x, e, '*')
-    plt.plot(xDual, h, '.') # plt.plot(x, h) no funciona pq x tiene 101 elementos y h tiene 100
+    plt.plot(x, e, '*-')
+    plt.plot(xDual, h, '.-') # plt.plot(x, h) no funciona pq x tiene 101 elementos y h tiene 100
+    #plt.plot([L/2, L/2], [-1, 1])
     plt.ylim(-1.1, 1.1)
     plt.xlim(x[0], x[-1])
     plt.grid()
