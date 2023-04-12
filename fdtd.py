@@ -27,17 +27,19 @@ dt = CFL * dx / c0
 tRange = np.arange(0, tFinal, dt) # Utiliza paso en vez de numero de puntos como linspace
 
 for t in tRange:
+    eMur = e[1]
+
     e[1:-1] = (-dt / dx / eps) * (h[1:] - h[:-1]) + e[1:-1]
 
     # Lado izquierdo
-    # e[0] = 0.0 # PEC
-    # e[0] = e[0] - 2* dt/dx/eps*h[0] # PMC
-    e[0] =  (-dt / dx / eps) * (h[0] - h[-1]) + e[0] # Periodica
+    # e[0] = 0.0                                       # PEC
+    # e[0] = e[0] - 2* dt/dx/eps*h[0]                  # PMC
+    # e[0] =  (-dt / dx / eps) * (h[0] - h[-1]) + e[0] # Periodica
+    e[0] = eMur + (c0*dt-dx)/(c0*dt+dx)*(e[1]-e[0])
 
     # Lado derecho
-    # e[-1] = 0.0
-    # e[-1] =  (-dt / dx / eps) * (h[0] - h[-1]) + e[0] # Periodica
-    e[-1] = e[0]
+    e[-1] = 0.0
+    # e[-1] = e[0]
 
 
     h[:] = (-dt / dx / mu) * (e[1:] - e[:-1]) + h[:]
