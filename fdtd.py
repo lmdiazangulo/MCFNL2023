@@ -7,7 +7,7 @@ c0 = 1/np.sqrt(eps*mu)
 CFL = 0.9
 tFinal = 20
 L = 10
-x0 = 5.0
+x0 = 3.0
 s0 = 0.75
 
 x = np.linspace(0, L, num=101)
@@ -19,18 +19,29 @@ dx = x[1] - x[0]
 # [:-1] es "todo menos el último" 
 
 e = np.exp( -(x - x0)**2 / (2*s0**2))
-e[0] = 0.0
-e[-1] = 0.0
 
-# h = np.zeros(xDual.shape)
-h = np.exp( -(xDual - x0)**2 / (2*s0**2))
+h = np.zeros(xDual.shape)
+# h = np.exp( -(xDual - x0)**2 / (2*s0**2))
 
 dt = CFL * dx / c0
 tRange = np.arange(0, tFinal, dt) # Utiliza paso en vez de numero de puntos como linspace
 
 for t in tRange:
     e[1:-1] = (-dt / dx / eps) * (h[1:] - h[:-1]) + e[1:-1]
+
+    # Lado izquierdo
+    # e[0] = 0.0 # PEC
+    # e[0] = e[0] - 2* dt/dx/eps*h[0] # PMC
+    e[0] =  (-dt / dx / eps) * (h[0] - h[-1]) + e[0] # Periodica
+
+    # Lado derecho
+    # e[-1] = 0.0
+    # e[-1] =  (-dt / dx / eps) * (h[0] - h[-1]) + e[0] # Periodica
+    e[-1] = e[0]
+
+
     h[:] = (-dt / dx / mu) * (e[1:] - e[:-1]) + h[:]
+
 
     plt.plot(x, e, '*')
     plt.plot(xDual, h, '.') # plt.plot(x, h) no funciona pq x tiene 101 elementos y h tiene 100
