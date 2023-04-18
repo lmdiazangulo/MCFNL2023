@@ -1,60 +1,39 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-eps = 1.0
-mu = 1.0
-c0 = 1/np.sqrt(eps*mu)
-CFL = 0.9
-tFinal = 20
-L = 10
-x0 = 3.0
-s0 = 0.75
+eps0 = 1.0
+mu0 = 1.0
+c0 = 1/np.sqrt(eps0*mu0)
 
-x = np.linspace(0, L, num=101)
-xDual = (x[1:] + x[:-1])/2 
-dx = x[1] - x[0]
+class FDTD_Maxwell_1D():
+    def __init__(self, L=10, CFL=1.0, Nx=101):
+        self.x = np.linspace(0, L, num=Nx)
+        self.xDual = (self.x[1:] + self.x[:-1])/2
 
-# Intervalo xMain[1:4] incluye posiciones 1,2,3 (no la 4)
-# [1:] es "todo menos el primero"
-# [:-1] es "todo menos el último" 
+        self.dx = self.x[1] - self.x[0]
+        self.dt = CFL * self.dx / c0
 
-e = np.exp( -(x - x0)**2 / (2*s0**2))
+        self.e = np.zeros(self.x.shape)
+        self.h = np.zeros(self.xDual.shape)
+    
+    def step(self):
+        e = self.e
+        h = self.h
 
-h = np.zeros(xDual.shape)
-# h = np.exp( -(xDual - x0)**2 / (2*s0**2))
+        cE = -self.dt / self.dx / eps0
+        cH = -self.dt / self.dx / mu0
 
-dt = CFL * dx / c0
-tRange = np.arange(0, tFinal, dt) # Utiliza paso en vez de numero de puntos como linspace
+        # eMur = e[1]
+        e[1:-1] = cE * (h[1:] - h[:-1]) + e[1:-1]
 
-for t in tRange:
-    eMur = e[1]
+        # Lado izquierdo
+        e[0] = 0.0                                       # PEC
+        # e[0] = e[0] - 2* dt/dx/eps*h[0]                  # PMC
+        # e[0] =  (-dt / dx / eps) * (h[0] - h[-1]) + e[0] # Periodica
+        # e[0] = eMur + (c0*self.dt-self.dx)/(c0*self.dt+self.dx)*(e[1]-e[0]) # Mur
 
-    e[1:-1] = (-dt / dx / eps) * (h[1:] - h[:-1]) + e[1:-1]
+        # Lado derecho
+        e[-1] = 0.0
+        # e[-1] = e[0]
 
-    # Lado izquierdo
-    # e[0] = 0.0                                       # PEC
-    # e[0] = e[0] - 2* dt/dx/eps*h[0]                  # PMC
-    # e[0] =  (-dt / dx / eps) * (h[0] - h[-1]) + e[0] # Periodica
-    e[0] = eMur + (c0*dt-dx)/(c0*dt+dx)*(e[1]-e[0])
-
-    # Lado derecho
-    e[-1] = 0.0
-    # e[-1] = e[0]
-
-
-    h[:] = (-dt / dx / mu) * (e[1:] - e[:-1]) + h[:]
-
-
-    plt.plot(x, e, '*')
-    plt.plot(xDual, h, '.') # plt.plot(x, h) no funciona pq x tiene 101 elementos y h tiene 100
-    plt.ylim(-1.1, 1.1)
-    plt.xlim(x[0], x[-1])
-    plt.grid()
-    #plt.show() # Te lo enseña
-    plt.pause(0.01)
-    plt.cla()
-
-
-# plt.savefig('nombre') te guarda la figura
-
-print("END")
+        h[:] = cH * (e[1:] - e[:-1]) + h[:]
