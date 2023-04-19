@@ -26,12 +26,32 @@ def test_pec_box():
     
     assert(R[0,1] >= 0.999999)
 
+def test_mur_pec_box():
+    fd = fdtd.FDTD_Maxwell_1D(boundaryConditions=["Mur", "PEC"])
+            
+    x0 = 3.0; s0 = 0.75
+    initialField = np.exp(-(fd.x - x0)**2 / (2*s0**2))
+    
+    fd.e[:] = initialField[:]
+    for _ in np.arange(0, 40, fd.dt):
+        fd.step()
+
+        # plt.plot(fd.x, fd.e, '*')
+        # plt.plot(fd.xDual, fd.h, '.')
+        # plt.ylim(-1.1, 1.1)
+        # plt.xlim(fd.x[0], fd.x[-1])
+        # plt.grid()
+        # plt.pause(0.01)
+        # plt.cla()
+    
+    assert(np.allclose(np.zeros(fd.e.shape), fd.e))
+
 def test_error():
 
     NxRange = np.int32(np.round(np.logspace(1, 3, num=20)))
     err = np.zeros(NxRange.shape)
 
-    for CFL in np.array([0.25, 0.5, 0.75, 1.0]):
+    for CFL in np.array([0.25, 0.5, 0.75, 0.999, 1.0]):
         for i in range(len(NxRange)):
 
             fd = fdtd.FDTD_Maxwell_1D(CFL=CFL, Nx=NxRange[i])
